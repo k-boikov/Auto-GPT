@@ -68,6 +68,27 @@ def split_text(
         yield " ".join(current_chunk)
 
 
+def summarize_text_with_nlp(text: str):
+    nlp = spacy.load(CFG.browse_spacy_language_model, disable=["ner", "parser"])
+    nlp.add_pipe("sentencizer")
+
+    def add_trf_word_pieces(span):
+        return span.doc.tensor[span.start : span.end]
+
+    Span.set_extension("trf_word_pieces", getter=add_trf_word_pieces, force=True)
+
+    split_text
+    doc = nlp(text)
+
+    # Find the most relevant sentences based on the sum of their word vectors
+    sentence_scores = [s._.trf_word_pieces[-1].sum() for s in doc.sents]
+    top_sentences = sorted(zip(doc.sents, sentence_scores), key=lambda x: -x[1])[:3]
+
+    # Concatenate the top sentences into a summary
+    summary = " ".join([s[0].text for s in top_sentences])
+    return summary
+
+
 def summarize_text(
     url: str, text: str, question: str, driver: Optional[WebDriver] = None
 ) -> str:
