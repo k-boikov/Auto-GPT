@@ -5,30 +5,44 @@ import spacy
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from autogpt.config import Config
-from autogpt.llm import count_message_tokens, create_chat_completion
+from autogpt.llm import (
+    count_message_tokens,
+    count_string_tokens,
+    create_chat_completion,
+)
 from autogpt.logs import logger
 from autogpt.memory import get_memory
 
 CFG = Config()
 
 
-def split_text(
+def split_text_for_summarization(
     text: str,
     max_length: int = CFG.browse_chunk_max_length,
     model: str = CFG.fast_llm_model,
     question: str = "",
+) -> Generator[str, None, None]:
+    max_tokens = max_length - count_message_tokens(
+        [create_message("", question)], model
+    )
+    for chunk in split_text(text, max_tokens, model):
+        yield create_message(chunk, question)
+
+
+def split_text(
+    text: str,
+    max_length: int = CFG.browse_chunk_max_length,
+    model: str = CFG.fast_llm_model,
 ) -> Generator[str, None, None]:
     """Split text into chunks of a maximum length
 
     Args:
         text (str): The text to split
         max_length (int, optional): The maximum length of each chunk. Defaults to 8192.
+        model: The AI model
 
     Yields:
         str: The next chunk of text
-
-    Raises:
-        ValueError: If the text is longer than the maximum length
     """
     flatened_paragraphs = " ".join(text.split("\n"))
     nlp = spacy.load(CFG.browse_spacy_language_model)
@@ -39,30 +53,19 @@ def split_text(
     current_chunk = []
 
     for sentence in sentences:
-        message_with_additional_sentence = [
-            create_message(" ".join(current_chunk) + " " + sentence, question)
-        ]
-
         expected_token_usage = (
-            count_message_tokens(messages=message_with_additional_sentence, model=model)
-            + 1
+            count_string_tokens(" ".join(current_chunk) + " " + sentence, model) + 1
         )
         if expected_token_usage <= max_length:
             current_chunk.append(sentence)
         else:
-            yield " ".join(current_chunk)
+            if current_chunk:
+                yield " ".join(current_chunk)
             current_chunk = [sentence]
-            message_this_sentence_only = [
-                create_message(" ".join(current_chunk), question)
-            ]
-            expected_token_usage = (
-                count_message_tokens(messages=message_this_sentence_only, model=model)
-                + 1
-            )
+            expected_token_usage = count_string_tokens(sentence, model) + 1
             if expected_token_usage > max_length:
-                raise ValueError(
-                    f"Sentence is too long in webpage: {expected_token_usage} tokens."
-                )
+                # Just skip that sentences
+                current_chunk = []
 
     if current_chunk:
         yield " ".join(current_chunk)
@@ -91,7 +94,7 @@ def summarize_text(
 
     summaries = []
     chunks = list(
-        split_text(
+        split_text_for_summarization(
             text, max_length=CFG.browse_chunk_max_length, model=model, question=question
         ),
     )

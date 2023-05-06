@@ -4,9 +4,10 @@ from typing import Dict, List, Tuple
 
 from autogpt.agent import Agent
 from autogpt.config import Config
-from autogpt.llm import count_message_tokens, count_string_tokens
+from autogpt.llm import Message, count_message_tokens
 from autogpt.llm.llm_utils import create_chat_completion
 from autogpt.log_cycle.log_cycle import PROMPT_SUMMARY_FILE_NAME, SUMMARY_FILE_NAME
+from autogpt.processing.text import split_text
 
 cfg = Config()
 
@@ -39,6 +40,10 @@ def get_newly_trimmed_messages(
         msg for msg in new_messages if msg not in current_context
     ]
 
+    if len(new_messages_not_in_context) > 2:
+        # Trap strange behavior
+        print("new_messages_not_in_context")
+
     # Find the index of the last message processed
     new_index = last_memory_index
     if new_messages_not_in_context:
@@ -50,8 +55,8 @@ def get_newly_trimmed_messages(
 
 def update_running_summary(
     agent: Agent,
-    current_memory: str,
-    new_events: List[Dict[str, str]],
+    current_memory: Message,
+    new_events: List[Message],
     token_limit: int,
 ) -> Dict[str, str]:
     """
@@ -73,19 +78,25 @@ def update_running_summary(
         update_running_summary(new_events)
         # Returns: "This reminds you of these events from your past: \nI entered the kitchen and found a scrawled note saying 7."
     """
+
+    # This can happen at any point during execution, not just the beginning
+    if len(new_events) == 0:
+        return current_memory
+
     # Create a copy of the new_events list to prevent modifying the original list
     new_events = copy.deepcopy(new_events)
 
-    send_token_limit = token_limit - 1000
-    current_tokens_used = count_string_tokens(current_memory, cfg.fast_llm_model)
-    if current_tokens_used > token_limit:
-        # TODO: maybe needs optimization in order to remove older memories first
-        current_memory = summarize_text(current_memory)
-        current_tokens_used = count_string_tokens(current_memory, cfg.fast_llm_model)
+    send_token_limit = token_limit - count_message_tokens(
+        get_message_for_summarization(), cfg.fast_llm_model
+    )
+    current_tokens_used = count_message_tokens([current_memory], cfg.fast_llm_model)
 
-    # Replace "assistant" with "you". This produces much better first person past tense results.
-    for i, event in enumerate(new_events):
-        tokens_to_add = count_message_tokens([event], cfg.fast_llm_model)
+    tokens_to_add = 0
+    i = 0
+    it = iter(new_events)
+    event = next(it, None)
+    while event:
+        # Replace "assistant" with "you". This produces much better first person past tense results.
         if event["role"].lower() == "assistant":
             event["role"] = "you"
 
@@ -93,95 +104,111 @@ def update_running_summary(
             try:
                 content_dict = json.loads(event["content"])
             except:
+                event = next(it, None)
+                i += 1
                 continue
             if "thoughts" in content_dict:
                 del content_dict["thoughts"]
             event["content"] = json.dumps(content_dict)
+            tokens_to_add = count_message_tokens([event], cfg.fast_llm_model)
 
         elif event["role"].lower() == "system":
             event["role"] = "your computer"
+            tokens_to_add = count_message_tokens([event], cfg.fast_llm_model)
 
         # Delete all user messages
         elif event["role"] == "user":
             new_events.remove(event)
+            event = next(it, None)
+            i += 1
             continue
-
-        # Commands` result can pass the immediate test for length but in combination
-        # with other events they might exceed the token limit.
-        if current_tokens_used + tokens_to_add > send_token_limit:
-            # Check if the main model is not a lot bigger, rare case, but might happen
-            # We sill just skip such massive events for now
-            if tokens_to_add > send_token_limit:
-                # TODO: chunk the message by paragraphs and then summarize or use some NLTK
-                new_events.remove(event)
-                continue
-            # Merge the old memory with the new events looped so far
-            current_memory = summarize_events(
-                agent, current_memory, new_events[0 : i - 1], token_limit
-            )
-            # Process the rest of the new events with the newly summarized current memory
-            return update_running_summary(
-                agent, current_memory, new_events[i:], token_limit
-            )
 
         current_tokens_used += tokens_to_add
 
-    # This can happen at any point during execution, not just the beginning
-    if len(new_events) == 0:
-        new_events = "Nothing new happened."
+        # Commands` result can pass the immediate test for length but in combination
+        # with other events they might exceed the token limit.
+        if current_tokens_used > send_token_limit:
+            # Check if the main model is not a lot bigger, rare case, but might happen
+            # In that case a single event would not fit for summarization
+            if tokens_to_add > send_token_limit:
+                tokens_that_would_have_fit = token_limit - (
+                    current_tokens_used - tokens_to_add
+                )
+                split_content = list(
+                    split_text(event["content"], tokens_that_would_have_fit)
+                )
 
-    current_memory = summarize_events(agent, current_memory, new_events, token_limit)
+                if len(split_content) == 0:
+                    # We failed to split, just remove that event
+                    new_events.remove(event)
+                    current_tokens_used -= tokens_to_add
+                    event = next(it, None)
+                    i += 1
+                    continue
+                else:
+                    event["content"] = split_content[0]
+                    # Merge the old memory with the first part of the chunk
+                    new_memory = summarize_events(
+                        agent, current_memory, new_events[:i], token_limit
+                    )
+                    current_memory = current_memory_message(new_memory)
 
-    message_to_return = {
+                    if len(split_content) > 1:
+                        # Create events from the rest of the chunks
+                        events_from_split = [
+                            {"role": event["role"], "content": chunk}
+                            for chunk in split_content[1:]
+                        ]
+                    else:
+                        events_from_split = []
+
+                    new_events = events_from_split + new_events[i:]
+                    it = iter(new_events)
+                    event = next(it, None)
+                    i = 0
+                    current_tokens_used = count_message_tokens(
+                        [current_memory], cfg.fast_llm_model
+                    )
+                    continue
+
+            # Merge the old memory with the new events looped so far
+            new_memory = summarize_events(
+                agent, current_memory, new_events[0 : i - 1], token_limit
+            )
+            current_memory = current_memory_message(new_memory)
+            # Process the rest of the new events with the newly summarized current memory
+            new_events = new_events[i:]
+            it = iter(new_events)
+            event = next(it, None)
+            i = 0
+            current_tokens_used = count_message_tokens(
+                [current_memory], cfg.fast_llm_model
+            )
+            continue
+
+        event = next(it, None)
+        i += 1
+
+    new_memory = summarize_events(agent, current_memory, new_events, token_limit)
+
+    return current_memory_message(new_memory)
+
+
+def current_memory_message(memory: str):
+    return {
         "role": "system",
-        "content": f"This reminds you of these events from your past: \n{current_memory}",
+        "content": f"This reminds you of these events from your past: \n{memory}",
     }
 
-    return message_to_return
 
-
-def summarize_text(text: str):
-    """
-    This function takes text and summarizes it using LLM.
-
-    Args:
-        text: (str): The text to summarize
-
-    Returns:
-        str: The summarized text
-    """
-
-    prompt = f'''Summarize the following text in a neutral and objective manner, without adding any personal opinions or interpretations. If not possible, just return keywords or cut text you think is irrelevant.
-
-Text to summarize:
-"""
-{text}
-"""
-'''
-
-    messages = [
-        {
-            "role": "user",
-            "content": prompt,
-        }
-    ]
-
-    return create_chat_completion(messages, cfg.fast_llm_model)
-
-
-def summarize_events(
-    agent: Agent,
-    current_memory: str,
-    new_events: List[Dict[str, str]],
-    token_limit: int,
-):
+def get_message_for_summarization(current_memory_content="", new_events=""):
     prompt = f'''Your task is to create a concise running summary of actions and information results in the provided text, focusing on key and potentially important information to remember.
 
 You will receive the current summary and the your latest actions. Combine them, adding relevant key information from the latest development in 1st person past tense and keeping the summary concise.
 
 Summary So Far:
 """
-{current_memory}
+{current_memory_content}
 """
 
 Latest Development:
@@ -189,28 +216,36 @@ Latest Development:
 {new_events}
 """
 '''
-
-    messages = [
+    return [
         {
             "role": "user",
             "content": prompt,
         }
     ]
 
-    summary_tlength = count_message_tokens(messages, cfg.fast_llm_model)
+
+def summarize_events(
+    agent: Agent,
+    current_memory: Message,
+    new_events: List[Dict[str, str]],
+    token_limit: int,
+):
+    message = get_message_for_summarization(current_memory["content"], str(new_events))
+
+    summary_tlength = count_message_tokens(message, cfg.fast_llm_model)
     if summary_tlength > token_limit:
-        # This should never happen in theory since we check both old memory and new events
+        # This should never happen in theory since we summed both old memory and new events
         return current_memory
 
     agent.log_cycle_handler.log_cycle(
         agent.config.ai_name,
         agent.created_at,
         agent.cycle_count,
-        messages,
+        message,
         PROMPT_SUMMARY_FILE_NAME,
     )
 
-    current_memory = create_chat_completion(messages, cfg.fast_llm_model)
+    current_memory = create_chat_completion(message, cfg.fast_llm_model)
 
     agent.log_cycle_handler.log_cycle(
         agent.config.ai_name,
