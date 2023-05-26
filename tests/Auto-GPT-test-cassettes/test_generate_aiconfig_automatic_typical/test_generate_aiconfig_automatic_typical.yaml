@@ -1,0 +1,210 @@
+interactions:
+- request:
+    body: '{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "\nYour
+      task is to devise up to 5 highly effective goals and an appropriate role-based
+      name (_GPT) for an autonomous agent, ensuring that the goals are optimally aligned
+      with the successful completion of its assigned task.\n\nThe user will provide
+      the task, you will provide only the output in the exact format specified below
+      with no explanation or conversation.\n\nExample input:\nHelp me with marketing
+      my business\n\nExample output:\nName: CMOGPT\nDescription: a professional digital
+      marketer AI that assists Solopreneurs in growing their businesses by providing
+      world-class expertise in solving marketing problems for SaaS, content products,
+      agencies, and more.\nGoals:\n- Engage in effective problem-solving, prioritization,
+      planning, and supporting execution to address your marketing needs as your virtual
+      Chief Marketing Officer.\n\n- Provide specific, actionable, and concise advice
+      to help you make informed decisions without the use of platitudes or overly
+      wordy explanations.\n\n- Identify and prioritize quick wins and cost-effective
+      campaigns that maximize results with minimal time and budget investment.\n\n-
+      Proactively take the lead in guiding you and offering suggestions when faced
+      with unclear information or uncertainty to ensure your marketing strategy remains
+      on track.\n"}, {"role": "user", "content": "Task: ''Help me create a rock opera
+      about cybernetic giraffes''\nRespond only with the output in the exact format
+      specified in the system prompt, with no explanation or conversation."}], "temperature":
+      0.0, "max_tokens": 0}'
+    headers:
+      AGENT-MODE:
+      - AAAAAAAAAAAAAAAAAAAAAMLheAAaAAAA0%2BuSeid%2BULvsea4JtiGRiSDSJSI%3DEUifiRBkKG5E2XzMDjRfl76ZC9Ub0wnz4XsNiRVBChTYbJcE3F
+      AGENT-TYPE:
+      - Auto-GPT-2023-X-TYPE
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1623'
+      Content-Type:
+      - application/json
+    method: POST
+    uri: https://api.openai.com/test/v1/chat/completions
+  response:
+    body:
+      string: "{\n  \"error\": {\n    \"message\": \"That model is currently overloaded
+        with other requests. You can retry your request, or contact us through our
+        help center at help.openai.com if the error persists. (Please include the
+        request ID 222bfe1154872c69767278fe7366533d in your message.)\",\n    \"type\":
+        \"server_error\",\n    \"param\": null,\n    \"code\": null\n  }\n}\n"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Alt-Svc:
+      - h3=":443"; ma=86400
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Cf-Cache-Status:
+      - DYNAMIC
+      Cf-Ray:
+      - 7cd81bb68ade1b67-ORD
+      Content-Length:
+      - '349'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 26 May 2023 18:34:14 GMT
+      Function-Execution-Id:
+      - 8bfn7p3kova9
+      Openai-Model:
+      - gpt-3.5-turbo-0301
+      Openai-Organization:
+      - significant-gravitas
+      Openai-Processing-Ms:
+      - '30011'
+      Openai-Version:
+      - '2020-10-01'
+      Server:
+      - Google Frontend
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+      X-Cloud-Trace-Context:
+      - b6e8b4bbe3a0a5c156b783e85ce92cd2
+      X-Powered-By:
+      - Express
+      X-Ratelimit-Limit-Requests:
+      - '3500'
+      X-Ratelimit-Limit-Tokens:
+      - '90000'
+      X-Ratelimit-Remaining-Requests:
+      - '3499'
+      X-Ratelimit-Remaining-Tokens:
+      - '89617'
+      X-Ratelimit-Reset-Requests:
+      - 17ms
+      X-Ratelimit-Reset-Tokens:
+      - 254ms
+      X-Request-Id:
+      - 222bfe1154872c69767278fe7366533d
+    status:
+      code: 429
+      message: Too Many Requests
+- request:
+    body: '{"model": "gpt-3.5-turbo", "messages": [{"role": "system", "content": "\nYour
+      task is to devise up to 5 highly effective goals and an appropriate role-based
+      name (_GPT) for an autonomous agent, ensuring that the goals are optimally aligned
+      with the successful completion of its assigned task.\n\nThe user will provide
+      the task, you will provide only the output in the exact format specified below
+      with no explanation or conversation.\n\nExample input:\nHelp me with marketing
+      my business\n\nExample output:\nName: CMOGPT\nDescription: a professional digital
+      marketer AI that assists Solopreneurs in growing their businesses by providing
+      world-class expertise in solving marketing problems for SaaS, content products,
+      agencies, and more.\nGoals:\n- Engage in effective problem-solving, prioritization,
+      planning, and supporting execution to address your marketing needs as your virtual
+      Chief Marketing Officer.\n\n- Provide specific, actionable, and concise advice
+      to help you make informed decisions without the use of platitudes or overly
+      wordy explanations.\n\n- Identify and prioritize quick wins and cost-effective
+      campaigns that maximize results with minimal time and budget investment.\n\n-
+      Proactively take the lead in guiding you and offering suggestions when faced
+      with unclear information or uncertainty to ensure your marketing strategy remains
+      on track.\n"}, {"role": "user", "content": "Task: ''Help me create a rock opera
+      about cybernetic giraffes''\nRespond only with the output in the exact format
+      specified in the system prompt, with no explanation or conversation."}], "temperature":
+      0.0, "max_tokens": 0}'
+    headers:
+      AGENT-MODE:
+      - AAAAAAAAAAAAAAAAAAAAAMLheAAaAAAA0%2BuSeid%2BULvsea4JtiGRiSDSJSI%3DEUifiRBkKG5E2XzMDjRfl76ZC9Ub0wnz4XsNiRVBChTYbJcE3F
+      AGENT-TYPE:
+      - Auto-GPT-2023-X-TYPE
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1623'
+      Content-Type:
+      - application/json
+    method: POST
+    uri: https://api.openai.com/test/v1/chat/completions
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAA3SUQW8cNwyF7/kVhM6zC6+zsd25BXGQFAWaIAnQFnEQcDWcGWY1oipSa28N//dC
+        M+vYh/aqocjvvUfNvePOtc6PaH5KYXX52x9/Yfol//h8jfj2+k/6sL09l61efnq7Da5xsvtB3k43
+        1l6mFMhYomucz4RGnWs3F1evNucXZxfbxk3SUXCtG5KtXq5frazknazOXp5tXOOK4kCuvXcpy5Ts
+        u8meorr2/GrbuKfeP883V5eNMzEMP4+2l5uHxvlR2JO69uu9m0gf22YJ5FqHqqyG0SqkRKNYBfyO
+        E7XwSfz+Q3r38ctNvCb1mVOd2AJGeP0rzJL4QOAlagm1B9iIBprIMwb+hxQ4wkghcRwAs7GaAsYO
+        pqLsGaPCLtdvNhJnKJH/LgQHVpaoYAKBe1o/cQDr0r1njyEcoSPlIVJXaxcldaKNdKKTCNJDFr8H
+        SZRRG0hZDtzVoXSXKBsMhTuMnmYwLSlJrkKylGGUYnM3isaZniSnLJ5U1zfxnWDQ9iau4I2EgDvJ
+        aAS3bCMcpVSujg4UJAFCTY1CqLPVJB8DR1os85isZNJlmCpVHunBH3eUIxl7GDhj39Pin2WMGtCq
+        w1Vylf9MJvSSJ7R1xXr9v7ZMNEnGXSDwI2b0Rlkb8Gh+PIJKHLSZh1EccKjQHWOQoZyYbzkE2BMl
+        wNJxJdZZBx/qpkOfZQI1rGYK9BxZxxno4xwAQU/U7dDvT74PA6nNucuCKgfKGAKo5eKrO3NhQl9R
+        pJ9rnkk2AYo6l4GXkbTmVG/wlNBbX8IS+ExaDZobPKLPZO8ppDm1iAceao61xMiPse4bYN090zo8
+        ZenKTPLc9wY4+lC6JWEc6LSgDQQeRuM4LI6qlOpr39d2TUVf/g+AYLmEI/A0UZ4VPDHPiJ9P+1kp
+        OVaMSWzGqK8K857s9J7+25sJ73gqU20r+uipsd+TgWIgXbuHxi1pfc+EKtG1Tk2SaxzHju5ce/bw
+        7eHFvwAAAP//AwBtbQiJHAUAAA==
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Alt-Svc:
+      - h3=":443"; ma=86400
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Cache-Control:
+      - no-cache, must-revalidate
+      Cf-Cache-Status:
+      - DYNAMIC
+      Cf-Ray:
+      - 7cd81cacad342bf9-ORD
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 26 May 2023 18:34:44 GMT
+      Function-Execution-Id:
+      - 8bfnfe6vftyx
+      Openai-Model:
+      - gpt-3.5-turbo-0301
+      Openai-Organization:
+      - significant-gravitas
+      Openai-Processing-Ms:
+      - '20189'
+      Openai-Version:
+      - '2020-10-01'
+      Server:
+      - Google Frontend
+      Strict-Transport-Security:
+      - max-age=15724800; includeSubDomains
+      Vary:
+      - Accept-Encoding
+      X-Cloud-Trace-Context:
+      - 88e7f9a9624dc975fbfa406e4f89e765;o=1
+      X-Powered-By:
+      - Express
+      X-Ratelimit-Limit-Requests:
+      - '3500'
+      X-Ratelimit-Limit-Tokens:
+      - '90000'
+      X-Ratelimit-Remaining-Requests:
+      - '3499'
+      X-Ratelimit-Remaining-Tokens:
+      - '89617'
+      X-Ratelimit-Reset-Requests:
+      - 17ms
+      X-Ratelimit-Reset-Tokens:
+      - 254ms
+      X-Request-Id:
+      - abd0aaa9a5f5081a5230206c12388e79
+    status:
+      code: 200
+      message: OK
+version: 1
